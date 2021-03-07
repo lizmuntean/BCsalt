@@ -1,0 +1,93 @@
+---
+title: "BC salt growth analysis -net"
+author: "Liz Muntean"
+date: "2/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+```{r, echo = FALSE}
+bcgrowth<-read.csv("./bcsaltgrowthdata29Jan21.xlsx.csv")
+mass_trt<-bcgrowth %>% select(salttrt,endotrt,net.change.in.weight) 
+height_trt<-bcgrowth %>% select(salttrt,endotrt,net.change.in.height)
+salt_mass<-bcgrowth %>% select(salttrt,net.change.in.weight)
+salt_height<-bcgrowth %>% select(salttrt,net.change.in.height)
+trt_mass<-bcgrowth %>% select(endotrt,net.change.in.weight) 
+trt_height<-bcgrowth %>% select(endotrt,net.change.in.height)
+```
+```{r}
+print(bcgrowth)
+endotrt=bcgrowth$endotrt
+salttrt=bcgrowth$salttrt
+net.change.in.weight=bcgrowth$net.change.in.weight
+net.change.in.height=bcgrowth$net.change.in.height
+grp_control<-subset(bcgrowth,endotrt=="C")
+grp_endo<-subset(bcgrowth,endotrt=="E")
+print(grp_endo)
+
+FCmass<-mean(grp_control$net.change.in.weight[salttrt=="F"],na.rm=T)
+print(FCmass)
+SCmass<-mean(grp_control$net.change.in.weight[salttrt=="S"],na.rm=T)
+print(SCmass)
+FCheight<-mean(grp_control$net.change.in.height[salttrt=="F"],na.rm=T)
+print(FCheight)
+SCheight<-mean(grp_control$net.change.in.height[salttrt=="S"],na.rm=T)
+print(SCheight)
+
+FEmass<-mean(grp_endo$net.change.in.weight[salttrt=="F"],na.rm=T)
+print(FEmass)
+SEmass<-mean(grp_endo$net.change.in.weight[salttrt=="S"],na.rm=T)
+print(SEmass)
+FEheight<-mean(grp_endo$net.change.in.height[salttrt=="F"],na.rm=T)
+print(FEheight)
+SEheight<-mean(grp_endo$net.change.in.height[salttrt=="S"],na.rm=T)
+print(SEheight)
+
+changemass<-data.frame(FreshControl=FCmass, SaltControl=SCmass, FreshEndo=FEmass, SaltEndo=SEmass)
+print(changemass)
+
+changeheight<-data.frame(FreshControl=FCheight, SaltControl=SCheight, FreshEndo=FEheight, SaltEndo=SEheight)
+print(changeheight)
+```
+
+```{r}
+ggplot(data=mass_trt)+
+ aes(x=salttrt, y=net.change.in.weight, fill=endotrt)+
+ geom_boxplot()
+```
+
+```{r}
+ggplot(data=height_trt)+
+ aes(x=salttrt, y=net.change.in.height, fill=endotrt)+
+ geom_boxplot()
+```
+
+```{r}
+ggplot(data=salt_mass)+
+ aes(x=salttrt, y=net.change.in.weight)+
+ geom_boxplot()
+```
+
+
+```{r}
+ggplot(data=salt_height)+
+ aes(x=salttrt, y=net.change.in.height)+
+ geom_boxplot()
+```
+```{r}
+ggplot(data=trt_mass)+
+ aes(x=endotrt, y=net.change.in.weight)+
+ geom_boxplot()
+```
+```{r}
+ggplot(data=trt_height)+
+ aes(x=endotrt, y=net.change.in.height)+
+ geom_boxplot()
+```
+

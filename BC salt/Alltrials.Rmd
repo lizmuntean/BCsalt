@@ -1,0 +1,52 @@
+---
+title: "Alltrials"
+author: "Liz Muntean"
+date: "2/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r, echo = FALSE}
+bcgrowth<-read.csv("./bcsaltgrowthdata29Jan21.xlsx.csv")
+
+print(bcgrowth)
+Strain=as.factor(bcgrowth$Strain)
+
+mass_sum<-bcgrowth%>% select(Strain,salttrt,endotrt,net.change.in.weight) 
+
+```
+
+```{r ggplot}
+ggplot(data=mass_sum)+
+ aes(x=salttrt, y=net.change.in.weight)+
+  geom_boxplot(aes(fill=endotrt,color=endotrt))+
+  scale_color_manual(values=c("black","black"))+
+  scale_fill_manual(values=c("blue","orange"))+
+  facet_wrap(~Strain)
+```
+
+
+```{r}
+height_sum<-bcgrowth %>% select(Strain,salttrt,endotrt,net.change.in.height)
+Strain=as.factor(height_sum$Strain)
+
+ggplot(data=height_sum)+
+ aes(x=salttrt, y=net.change.in.height)+
+  geom_boxplot(aes(fill=endotrt,color=endotrt))+
+  scale_color_manual(values=c("black","black"))+
+  scale_fill_manual(values=c("blue","orange"))+
+  facet_wrap(~Strain)
+```
+```{r}
+mass_sum.w<-mass_sum%>%pivot_wider(
+  names_from=c(salttrt,endotrt),
+  names_sep=".",
+  values_from = net.change.in.weight)
+print(mass_sum.w)
+```
+https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html

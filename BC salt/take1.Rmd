@@ -1,0 +1,64 @@
+---
+title: "Growth by trial"
+author: "Liz Muntean"
+date: "2/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r, echo = FALSE}
+bcgrowth<-read.csv("./bcsaltgrowthdata29Jan21.xlsx.csv")
+
+print(bcgrowth)
+Strain=as.factor(bcgrowth$Strain)
+
+mass_sum<-bcgrowth%>% group_by(Strain,salttrt,endotrt,net.change.in.weight) 
+
+mass_sum.w<-net.change.in.weight%>%pivot_wider(
+  names_from=c(salttrt,endotrt),
+  names_sep=".",
+  values_from = net.change.in.weight)
+print(mass_sum.w)
+mass_sum.l<-mass_sum.w%>%pivot_longer(cols=c(F.C,F.E,S.C,S.E),names_to="condition")%>%mutate(condition=factor(condition, levels=unique(condition)))
+mass_sum.l
+
+grp_812<-subset(mass_sum, Strain=="812")
+print(grp_812)
+grp_2039<-subset(mass_sum, Strain=="2039")
+grp_10656<-subset(mass_sum, Strain=="10656")
+grp_10709<-subset(mass_sum, Strain=="10709")
+grp_10822<-subset(mass_sum, Strain=="10822")
+grp_10899<-subset(mass_sum, Strain=="10899")
+grp_10915<-subset(mass_sum, Strain=="10915")
+grp_10964<-subset(mass_sum, Strain=="10964")
+grp_10998<-subset(mass_sum, Strain=="10998")
+
+```
+
+```{r ggplot}
+ggplot(data=mass_sum)+
+ aes(x=salttrt, y=mass.mn)+
+  geom_boxplot(aes(fill=endotrt,color=endotrt))+
+  scale_color_manual(values=c("blue","orange"))+
+  scale_fill_manual(values=c("blue","orange"))+
+  facet_wrap(~Strain)
+```
+
+
+```{r}
+height_sum<-bcgrowth %>% group_by(Strain,salttrt,endotrt) %>% summarize(height.mn = mean(net.change.in.height,na.rm=TRUE), .groups='drop')
+Strain=as.factor(mass_sum$Strain)
+height.mn=bcgrowth$height.mn
+
+ggplot(data=height_sum)+
+ aes(x=salttrt, y=height.mn)+
+  geom_boxplot(aes(fill=endotrt,color=endotrt))+
+  scale_color_manual(values=c("blue","orange"))+
+  scale_fill_manual(values=c("blue","orange"))+
+  facet_wrap(~Strain)
+```
