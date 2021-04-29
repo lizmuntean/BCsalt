@@ -1,5 +1,5 @@
 ---
-title: "Alltrials"
+title: "Alltrials_trt"
 author: "Liz Muntean"
 date: "2/25/2021"
 output: html_document
@@ -12,11 +12,9 @@ library(tidyverse)
 ```
 
 ```{r, echo = FALSE}
-bcgrowth<-read.csv("./bcsaltgrowthdata29Jan21.xlsx.csv")
-
-print(bcgrowth)
+bcgrowth<-read.csv("./bcsaltgrowthdata24Mar21.xlsx.csv")
 Strain=as.factor(bcgrowth$Strain)
-
+bcgrowth<-subset(bcgrowth, bcgrowth$status.at.harvest !="dead")
 mass_sum<-bcgrowth%>% select(Strain,salttrt,endotrt,net.change.in.weight) 
 
 ```
@@ -42,11 +40,4 @@ ggplot(data=height_sum)+
   scale_fill_manual(values=c("blue","orange"))+
   facet_wrap(~Strain)
 ```
-```{r}
-mass_sum.w<-mass_sum%>%pivot_wider(
-  names_from=c(salttrt,endotrt),
-  names_sep=".",
-  values_from = net.change.in.weight)
-print(mass_sum.w)
-```
-https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
+

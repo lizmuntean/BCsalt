@@ -1,0 +1,85 @@
+---
+title: "Root vs Shoot"
+author: "Liz Muntean"
+date: "4/22/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r, echo=FALSE, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+bcgrowth<-read.csv("./bcsaltgrowthdata24Mar21.xlsx.csv")
+Strain=as.factor(bcgrowth$Strain)
+bcgrowth<-subset(bcgrowth, bcgrowth$status.at.harvest !="dead")
+print(bcgrowth)
+bcgrowth<-mutate(bcgrowth,percentroot=m2root/m2tot,percentshoot=(m2shoot/m2tot)) #remember to use the arrow instead of the pipeline to permanently transorm the data frame
+percentroot=bcgrowth$percentroot #remember you need to name the new columns so you can call on them as objects
+percentshoot=bcgrowth$percentshoot
+bcgrowth2<-bcgrowth%>%select(Strain, organism,salttrt,endotrt,percentroot,percentshoot)
+bcgrowth2<-na.omit(bcgrowth2) #removes all rows with NA values from the data frame
+print(bcgrowth2)
+
+```
+
+```{r, echo=FALSE}
+ggplot(data=bcgrowth2)+
+ aes(x=salttrt, y=percentroot)+
+  geom_boxplot(aes(fill=endotrt,color=endotrt))+
+  scale_color_manual(values=c("black","black"))+
+  scale_fill_manual(values=c("light blue","orange"))+
+  facet_wrap(~Strain)
+```
+
+```{r, echo=FALSE}
+ggplot(data=bcgrowth2)+
+ aes(x=salttrt, y=percentshoot)+
+  geom_boxplot(aes(fill=endotrt,color=endotrt))+
+  scale_color_manual(values=c("black","black"))+
+  scale_fill_manual(values=c("light blue","orange"))+
+  facet_wrap(~Strain)
+```
+```{r, echo=FALSE}
+ggplot(data=bcgrowth2)+
+ aes(x=salttrt, y=percentroot, fill=endotrt)+
+  scale_fill_manual(values=c("light blue","orange"))+
+ geom_boxplot()
+```
+```{r, echo=FALSE}
+ggplot(data=bcgrowth2)+
+  aes(x=salttrt, y=percentroot)+
+ geom_boxplot()
+```
+```{r, echo=FALSE}
+ggplot(data=bcgrowth2)+
+  aes(x=endotrt, y=percentroot)+
+ geom_boxplot()
+```
+```{r, echo=FALSE}
+ggplot(data=bcgrowth2)+
+  aes(x=organism, y=percentroot, fill=salttrt)+
+  scale_fill_manual(values=c("light blue","orange"))+
+ geom_boxplot()
+```
+Bacteria vs Fungi, Control included
+```{r, echo=FALSE, include=FALSE}
+bcgrowth3<-subset(bcgrowth2, bcgrowth$endotrt !="C") #no controls subset
+bcgrowth3<-bcgrowth3[-c(99,100,101,109,110,111),]
+bcgrowth3<-na.omit(bcgrowth3)
+print(bcgrowth3)
+```
+```{r, echo=FALSE}
+ggplot(data=bcgrowth3)+
+  aes(x=organism, y=percentroot, fill=salttrt)+
+  scale_fill_manual(values=c("light blue","orange"))+
+ geom_boxplot()
+```
+Bacteria vs Fungi, Control NOT included
+```{r, echo= FALSE}
+ggplot(data=bcgrowth3)+
+  aes(x=organism, y=percentroot)+
+ geom_boxplot()
+```
+Bacteria vs Fungi no controls, overall

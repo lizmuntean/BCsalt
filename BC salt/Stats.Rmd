@@ -1,0 +1,228 @@
+---
+title: "Stats"
+author: "Liz Muntean"
+date: "4/23/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(broom)
+library(AICcmodavg)
+bcgrowth<-read.csv("./bcsaltgrowthdata24Mar21.xlsx.csv")
+Strain=as.factor(bcgrowth$Strain)
+endotrt=as.factor(bcgrowth$endotrt)
+salttrt=as.factor(bcgrowth$salttrt)
+bcgrowth<-subset(bcgrowth, bcgrowth$status.at.harvest !="dead")
+bcgrowth2<-bcgrowth%>% select(Strain,organism,salttrt,endotrt,net.change.in.weight,net.change.in.height)
+net.change.in.weight<-bcgrowth2$net.change.in.weight
+net.change.in.height<-bcgrowth2$net.change.in.height
+print(bcgrowth2)
+```
+One-way ANOVAs for mass
+```{r one way ANOVA, echo=FALSE}
+#mass
+one.way.saltmass<-aov(net.change.in.weight~salttrt, data=bcgrowth2)
+summary(one.way.saltmass)
+one.way.endomass<-aov(net.change.in.weight~endotrt, data=bcgrowth2)
+summary(one.way.endomass)
+```
+One-way ANOVAs for height
+```{r, echo=FALSE}
+#height
+one.way.saltheight<-aov(net.change.in.height~salttrt, data=bcgrowth2)
+summary(one.way.saltheight)
+one.way.endoheight<-aov(net.change.in.height~endotrt, data=bcgrowth2)
+summary(one.way.endoheight)
+```
+Two way ANOVAs, top is mass and bottom is height
+```{r two way ANOVA, echo=FALSE}
+two.way.mass<-aov(net.change.in.weight~salttrt+endotrt, data=bcgrowth2)
+summary(two.way.mass)
+two.way.height<-aov(net.change.in.height~salttrt+endotrt, data=bcgrowth2)
+summary(two.way.height)
+```
+Interaction ANOVA salt*endophyte
+```{r interaction ANOVA, echo=FALSE}
+interaction.mass<-aov(net.change.in.weight~salttrt*endotrt, data=bcgrowth2)
+summary(interaction.mass)
+interaction.height<-aov(net.change.in.height~salttrt*endotrt, data=bcgrowth2)
+summary(interaction.height)
+```
+Blocking ANOVA using Strain as confounding variable. Not sure if that is really appropriate here though...
+```{r blocking ANOVA, echo=FALSE}
+blocking.mass<- aov(net.change.in.weight ~ salttrt + endotrt + Strain, data = bcgrowth2)
+summary(blocking.mass)
+blocking.height<- aov(net.change.in.height ~ salttrt + endotrt + Strain, data = bcgrowth2)
+summary(blocking.height)
+```
+
+
+The model with the lowest AIC score (listed first in the table) is the best fit for the data. AIC weight is the percent variation in dependent variable explained by the model. More than 2 delta-AIC probably isnt a good model of explanation.
+So it looks like the blocking model is the best fit, individual Strains (obviously) influenced the dependent variable.
+Check for homoscedasticity.
+The diagnostic plots show the unexplained variance (residuals) across the range of the observed data. The red line representing the mean of the residuals should be horizontal and centered on zero (or on one, in the scale-location plot), meaning that there are no large outliers that would cause bias in the model.The normal Q-Q plot plots a regression between the theoretical residuals of a perfectly-heteroscedastic model and the actual residuals of your model, so the closer to a slope of 1 this is the better.
+```{r testing for best fit AIC, echo=FALSE}
+
+library(AICcmodavg)
+
+model.set.mass <- list(one.way.saltmass, one.way.endomass, two.way.mass, interaction.mass, blocking.mass)
+model.names.mass <- c("one.way.saltmass", "one.way.endomass", "two.way.mass", "interaction.mass", "blocking.mass")
+aictab(model.set.mass, modnames = model.names.mass)
+
+model.set.height <- list(one.way.saltheight, one.way.endoheight, two.way.height, interaction.height, blocking.height)
+model.names.height <- c("one.way.saltheight", "one.way.endoheight", "two.way.height", "interaction.height", "blocking.height")
+aictab(model.set.height, modnames = model.names.height)
+```
+
+Tukey's Honestly Significant Difference to find which groups are statistically different from one another.
+```{r, echo=FALSE}
+
+par(mfrow=c(2,2))
+plot(blocking.mass)
+par(mfrow=c(1,1))
+
+par(mfrow=c(2,2))
+plot(blocking.height)
+par(mfrow=c(1,1))
+
+tukey.blocking.mass<-TukeyHSD(blocking.mass)
+tukey.blocking.mass
+
+tukey.blocking.height<-TukeyHSD(blocking.height)
+tukey.blocking.height
+```
+
+Groupwise comparisons Salt:Endo for mass (top) and height (bottom).
+```{r, include=FALSE}
+#Results basically say S vs F is significant, there is some significance between strains compared to one another but that seems not very useful to me. 
+#Now plotting salttrt and Strain groupwise differences for mass. Anything significant doesn't include 0.
+
+tukey.plot.aov<-aov(net.change.in.weight~salttrt:Strain, data=bcgrowth2)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+
+#endotrt:Strain for mass
+tukey.plot.aov<-aov(net.change.in.weight~endotrt:Strain, data=bcgrowth2)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+
+#salttrt:Strain for height
+tukey.plot.aov<-aov(net.change.in.height~salttrt:Strain, data=bcgrowth2)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+
+#endotrt:Strain for height
+tukey.plot.aov<-aov(net.change.in.height~endotrt:Strain, data=bcgrowth2)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+```
+
+```{r,echo=FALSE}
+#endotrt:salttrt for mass
+tukey.plot.aov<-aov(net.change.in.weight~salttrt:endotrt, data=bcgrowth2)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+
+#endotrt:salttrt for height
+tukey.plot.aov<-aov(net.change.in.height~salttrt:endotrt, data=bcgrowth2)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+
+```
+
+```{r ggplot, echo=FALSE}
+
+two.way.plot <- ggplot(bcgrowth2, aes(x = salttrt, y=net.change.in.weight, group=endotrt )) +
+  geom_point(cex = 1.5, pch = 1.0,position = position_jitter(w = 0.1, h = 0))
+
+#Significant groups for both height mass are: S:C-F:C, S:E-F:C, F:E-S:C, S:E-F:E. Now we make a data frame for groupwise differences
+#summarize original data with endo and salt as grouping variables
+mean.mass.data <- bcgrowth2 %>%
+  group_by(salttrt, endotrt) %>%
+  summarise(mass = mean(net.change.in.weight,na.rm=TRUE)) 
+print(mean.mass.data)
+mean.mass.data$group <- c("a","b","b","c")
+
+two.way.plot <- two.way.plot +
+  stat_summary(fun.data = 'mean_se', geom = 'errorbar', width = 0.2) +
+  stat_summary(fun.data = 'mean_se', geom = 'pointrange') +
+  geom_point(data=mean.mass.data, aes(x=salttrt, y=mass))
+
+
+two.way.plot
+
+```
+
+```{r splitting the dataframe, include=FALSE}
+library(dplyr)
+library(purrr)
+library(tidyr)
+bcgrowthsplit<-split(bcgrowth2,bcgrowth2$Strain) #splits the dataframe according to Strain into a list
+str(bcgrowthsplit)
+names(bcgrowthsplit) <- c("df10630", "df10656", "df10709", "df10822", "df10899","df10899(t2)", "df10915", "df10964", "df10998", "df1305", "df1472", "df2039", "df811", "df812")
+list2env(bcgrowthsplit, envir = .GlobalEnv)
+
+```
+
+```{r individual Strain ANOVAs, echo=FALSE}
+one.way.salt.10998<-aov(net.change.in.weight~salttrt, data=df10998)
+summary(one.way.salt.10998)
+
+one.way.endo.10998<-aov(net.change.in.weight~endotrt, data=df10998)
+summary(one.way.endo.10998)
+
+two.way.mass.10998<-aov(net.change.in.weight~salttrt+endotrt, data=df10998)
+summary(two.way.mass.10998)
+
+interaction.mass.10998<-aov(net.change.in.weight~salttrt*endotrt, data=df10998)
+summary(interaction.mass.10998)
+
+model.set.10998 <- list(one.way.salt.10998, one.way.endo.10998, two.way.mass.10998, interaction.mass.10998)
+model.names.10998 <- c("one.way.salt.10998","one.way.endo.10998", "two.way.mass.10998", "interaction.mass.10998")
+aictab(model.set.10998, modnames = model.names.10998)
+
+par(mfrow=c(2,2))
+plot(two.way.mass.10998)
+par(mfrow=c(1,1))
+
+par(mfrow=c(2,2))
+plot(two.way.mass.10998)
+par(mfrow=c(1,1))
+
+tukey.10998<-TukeyHSD(two.way.mass.10998)
+tukey.10998
+
+tukey.plot.aov<-aov(net.change.in.weight~salttrt:endotrt, data=df10998)
+tukey.plot.test<-TukeyHSD(tukey.plot.aov)
+plot(tukey.plot.test, las=1)
+
+two.way.plot <- ggplot(df10998, aes(x = salttrt, y = net.change.in.weight, group= endotrt)) +
+  geom_point(cex = 1.5, pch = 1.0,position = position_jitter(w = 0.1, h = 0))
+
+mean.mass.10998 <- df10998 %>%
+  group_by(salttrt, endotrt) %>%
+  summarise(mass = mean(net.change.in.weight))
+print(mean.mass.10998)
+mean.mass.10998$group <- c("a","b","b","c")
+mean.mass.10998
+
+two.way.plot <- two.way.plot +
+  stat_summary(fun.data = 'mean_se', geom = 'errorbar', width = 0.2) +
+  stat_summary(fun.data = 'mean_se', geom = 'pointrange') +
+  geom_point(data=mean.mass.10998, aes(x=salttrt, y=mean.mass.10998$mass))
+
+#two.way.plot <- two.way.plot +
+  #geom_text(data=mean.mass.10998, label=mean.mass.10998$group, vjust = -8, size = 5) +
+  #facet_wrap(~ endotrt)
+
+two.way.plot
+```
+
+

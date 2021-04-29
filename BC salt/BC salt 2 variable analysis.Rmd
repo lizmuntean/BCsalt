@@ -1,8 +1,10 @@
 ---
-title: "BC salt growth analysis -net"
+title: "BC salt 2 variable analysis"
 author: "Liz Muntean"
 date: "2/11/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,17 +14,20 @@ library(tidyverse)
 ```
 
 
-```{r, echo = FALSE}
-bcgrowth<-read.csv("./bcsaltgrowthdata29Jan21.xlsx.csv")
+```{r, include= FALSE, echo = FALSE}
+bcgrowth<-read.csv("./bcsaltgrowthdata24Mar21.xlsx.csv")
+bcgrowth<-subset(bcgrowth, bcgrowth$status.at.harvest !="dead")
 mass_trt<-bcgrowth %>% select(salttrt,endotrt,net.change.in.weight) 
 height_trt<-bcgrowth %>% select(salttrt,endotrt,net.change.in.height)
 salt_mass<-bcgrowth %>% select(salttrt,net.change.in.weight)
 salt_height<-bcgrowth %>% select(salttrt,net.change.in.height)
 trt_mass<-bcgrowth %>% select(endotrt,net.change.in.weight) 
 trt_height<-bcgrowth %>% select(endotrt,net.change.in.height)
-```
-```{r}
 print(bcgrowth)
+```
+
+```{r, include=FALSE, echo=FALSE}
+
 endotrt=bcgrowth$endotrt
 salttrt=bcgrowth$salttrt
 net.change.in.weight=bcgrowth$net.change.in.weight
@@ -48,44 +53,50 @@ FEheight<-mean(grp_endo$net.change.in.height[salttrt=="F"],na.rm=T)
 print(FEheight)
 SEheight<-mean(grp_endo$net.change.in.height[salttrt=="S"],na.rm=T)
 print(SEheight)
-
-changemass<-data.frame(FreshControl=FCmass, SaltControl=SCmass, FreshEndo=FEmass, SaltEndo=SEmass)
-print(changemass)
-
-changeheight<-data.frame(FreshControl=FCheight, SaltControl=SCheight, FreshEndo=FEheight, SaltEndo=SEheight)
-print(changeheight)
 ```
 
-```{r}
+```{r, echo=FALSE}
+changemass<-data.frame(FreshControl=FCmass, SaltControl=SCmass, FreshEndo=FEmass, SaltEndo=SEmass)
+print(changemass)#average
+```
+Average change in mass by treatment
+```{r, echo=FALSE}
+changeheight<-data.frame(FreshControl=FCheight, SaltControl=SCheight, FreshEndo=FEheight, SaltEndo=SEheight)
+print(changeheight)#average
+```
+Average change in height by treatment
+```{r, echo=FALSE}
 ggplot(data=mass_trt)+
  aes(x=salttrt, y=net.change.in.weight, fill=endotrt)+
+        scale_fill_manual(values=c("light blue","orange"))+
  geom_boxplot()
 ```
 
-```{r}
+```{r, echo=FALSE}
 ggplot(data=height_trt)+
  aes(x=salttrt, y=net.change.in.height, fill=endotrt)+
+        scale_fill_manual(values=c("light blue","orange"))+
  geom_boxplot()
 ```
 
-```{r}
+```{r, echo=FALSE}
 ggplot(data=salt_mass)+
  aes(x=salttrt, y=net.change.in.weight)+
  geom_boxplot()
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 ggplot(data=salt_height)+
  aes(x=salttrt, y=net.change.in.height)+
  geom_boxplot()
 ```
-```{r}
+```{r, echo=FALSE}
 ggplot(data=trt_mass)+
  aes(x=endotrt, y=net.change.in.weight)+
  geom_boxplot()
 ```
-```{r}
+```{r, echo=FALSE}
 ggplot(data=trt_height)+
  aes(x=endotrt, y=net.change.in.height)+
  geom_boxplot()
